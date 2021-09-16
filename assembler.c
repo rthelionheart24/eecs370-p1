@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     if (!readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2))
     {
         /* reached end of file */
-        return 0;
+        exit(1);
     }
 
     rewind(inFilePtr);
@@ -72,13 +72,9 @@ int main(int argc, char *argv[])
             {
                 if (strcmp(idx[i].label, label) == 0)
                 {
-                    repeat = 1;
-                    break;
+                   exit(1);
                 }
             }
-
-            if (repeat == 1)
-                exit(1);
 
             strcpy(idx[num_label].label, label);
             idx[num_label].addr = trace;
