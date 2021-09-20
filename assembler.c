@@ -48,16 +48,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    /* here is an example for how to use readAndParse to read a line from
-        inFilePtr */
-    if (!readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2))
-    {
-        /* reached end of file */
-        exit(1);
-    }
-
-    rewind(inFilePtr);
-
     int trace = 0;
     int num_label = 0;
 
@@ -67,12 +57,11 @@ int main(int argc, char *argv[])
     {
         if (strcmp(label, "") != 0)
         {
-            int repeat = 0;
             for (int i = 0; i < num_label; i++)
             {
                 if (strcmp(idx[i].label, label) == 0)
                 {
-                   exit(1);
+                    exit(1);
                 }
             }
 
@@ -105,25 +94,7 @@ int main(int argc, char *argv[])
             instruction += atoi(arg1);
             instruction <<= 16;
 
-            if (isNumber(arg2))
-            {
-                instruction += atoi(arg2);
-            }
-            else
-            {
-                int found = 0;
-                for (int i = 0; i < num_label; i++)
-                {
-                    if (strcmp(idx[i].label, arg2) == 0)
-                    {
-                        instruction += idx[i].addr;
-                        found = 1;
-                        break;
-                    }
-                }
-                if (!found)
-                    exit(1);
-            }
+            instruction += atoi(arg2);
         }
         else if (!strcmp(opcode, "nor"))
         {
@@ -133,25 +104,7 @@ int main(int argc, char *argv[])
             instruction += atoi(arg1);
             instruction <<= 16;
 
-            if (isNumber(arg2))
-            {
-                instruction += atoi(arg2);
-            }
-            else
-            {
-                int found = 0;
-                for (int i = 0; i < num_label; i++)
-                {
-                    if (strcmp(idx[i].label, arg2) == 0)
-                    {
-                        instruction += idx[i].addr;
-                        found = 1;
-                        break;
-                    }
-                }
-                if (!found)
-                    exit(1);
-            }
+            instruction += atoi(arg2);
         }
         else if (!strcmp(opcode, "lw"))
         {
@@ -164,7 +117,7 @@ int main(int argc, char *argv[])
             if (isNumber(arg2))
             {
                 if (atoi(arg2) <= 32767 && atoi(arg2) >= -32768)
-                    instruction += atoi(arg2);
+                    instruction += (atoi(arg2) & 0xFFFF);
                 else
                     exit(1);
             }
@@ -195,7 +148,7 @@ int main(int argc, char *argv[])
             if (isNumber(arg2))
             {
                 if (atoi(arg2) <= 32767 && atoi(arg2) >= -32768)
-                    instruction += atoi(arg2);
+                    instruction += (atoi(arg2) & 0xFFFF);
                 else
                     exit(1);
             }
@@ -226,25 +179,26 @@ int main(int argc, char *argv[])
             if (isNumber(arg2))
             {
                 if (atoi(arg2) <= 32767 && atoi(arg2) >= -32768)
-                    instruction += atoi(arg2);
+                    instruction += (atoi(arg2) & 0xFFFF);
                 else
                     exit(1);
             }
             else
             {
+                int found = 0;
                 for (int i = 0; i < num_label; i++)
                 {
-                    int found = 0;
+
                     if (strcmp(idx[i].label, arg2) == 0)
                     {
-                        int trimmed = (idx[i].addr - PC - 1) & 0b1111111111111111;
-                        instruction += trimmed;
+                        instruction += ((idx[i].addr - PC - 1) & 0xFFFF);
                         found = 1;
+
                         break;
                     }
-                    if (!found)
-                        exit(1);
                 }
+                if (!found)
+                    exit(1);
             }
         }
         else if (!strcmp(opcode, "jalr"))
@@ -269,8 +223,14 @@ int main(int argc, char *argv[])
         {
 
             if (isNumber(arg0))
-                instruction = atoi(arg0);
-
+            {
+                if (atoi(arg0) <= 2147483647 && atoi(arg0) >= -2147483648)
+                {
+                    instruction = atoi(arg0);
+                }
+                else
+                    exit(1);
+            }
             else
             {
                 int found = 0;
